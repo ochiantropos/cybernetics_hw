@@ -14,6 +14,10 @@ class AbstractSequence(ABC):
     def see_next(self):
         pass
 
+    @staticmethod
+    def min_value():
+        pass
+
     def get_current(self):
         return self.last_id
 
@@ -26,3 +30,7 @@ class IncrementalSequenceStrategy(AbstractSequence):
 
     def see_next(self):
         return self.last_id + 1
+
+    @staticmethod
+    def min_value():
+        return 0

@@ -39,6 +39,7 @@ class ShelveDatabase(AbstractDatabase):
 
     def __init__(self, db_name: str, sequence_strategy: AbstractSequence.__class__):
         super().__init__(db_name)
+        self.sequence_strategy_cls = sequence_strategy
         self.sequence_strategy = sequence_strategy(self.get_last_id())
 
     def write(self, obj):
@@ -123,5 +124,5 @@ class ShelveDatabase(AbstractDatabase):
         with self._open_db() as db:
             keys = set(map(int, db.keys()))
             if len(keys) == 0:
-                return 0
+                return self.sequence_strategy_cls.min_value()
             return max(keys)

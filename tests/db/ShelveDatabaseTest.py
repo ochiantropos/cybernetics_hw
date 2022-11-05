@@ -16,11 +16,17 @@ class Player:
 class ShelveDatabaseTest(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.repository = ShelveDatabase("players_test", IncrementalSequenceStrategy)
+
+    def tearDown(self) -> None:
+        self.remove_test_db_files()
+
+    @staticmethod
+    def remove_test_db_files():
         my_dir = os.path.join(os.path.dirname(__file__), "../../data/")
         for file_name in os.listdir(my_dir):
             if file_name.startswith("players_test"):
                 os.remove(os.path.join(my_dir, file_name))
-        self.repository = ShelveDatabase("players_test", IncrementalSequenceStrategy)
 
     def test_saves_obj(self):
         player = Player("John", "Doe")
