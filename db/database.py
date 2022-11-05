@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import shelve
-from sequence import AbstractSequence
+from .sequence import AbstractSequence
 import os
 
 
@@ -43,7 +43,7 @@ class ShelveDatabase(AbstractDatabase):
 
     def write(self, obj):
         with self._open_db() as db:
-            self._write(obj, db)
+            return self._write(obj, db)
 
     def write_all_objects(self, obj_list):
         with self._open_db() as db:
@@ -92,10 +92,12 @@ class ShelveDatabase(AbstractDatabase):
     def _write(self, obj, db):
         if self._is_new(obj):
             pk = self.sequence_strategy.next()
-            self._set_id(obj, id)
+            self._set_id(obj, pk)
             db[str(pk)] = obj
+            return obj
         else:
             db[str(obj.pk)] = obj
+            return obj
 
     def _get_obj(self, pk, db):
         obj = db[str(pk)]
@@ -121,5 +123,5 @@ class ShelveDatabase(AbstractDatabase):
         with self._open_db() as db:
             keys = set(map(int, db.keys()))
             if len(keys) == 0:
-                return 1
+                return 0
             return max(keys)
