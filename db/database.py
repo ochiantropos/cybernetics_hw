@@ -29,6 +29,10 @@ class AbstractDatabase(ABC):
     def delete_obj_by_id(self, pk):
         pass
 
+    @abstractmethod
+    def sync_obj(self, obj):
+        pass
+
 
 class ShelveDatabase(AbstractDatabase):
     data_folder = os.path.join(os.path.dirname(__file__), "../data/")
@@ -49,7 +53,7 @@ class ShelveDatabase(AbstractDatabase):
     # TODO: throw exception instead of returning None
     def get_obj_by_id(self, pk):
         with self._open_db() as db:
-            if str(pk) in db:
+            if self._id_exists(pk, db):
                 return self._get_obj(pk, db)
             else:
                 return None
@@ -65,10 +69,22 @@ class ShelveDatabase(AbstractDatabase):
     # TODO: throw exception instead of passing
     def delete_obj_by_id(self, pk):
         with self._open_db() as db:
-            if str(pk) in db:
+            if self._id_exists(pk, db):
                 self._delete_obj(pk, db)
             else:
                 pass
+
+    # TODO: throw exception instead of doing nothing
+    def sync_obj(self, obj):
+        if self._is_new(obj):
+            return obj
+        else:
+            with self._open_db() as db:
+                if self._id_exists(obj.pk, db):
+                    return self._get_obj(obj.pk, db)
+                else:
+                    # TODO: throw exception
+                    return None
 
     def _delete_obj(self, pk, db):
         del db[str(pk)]
@@ -89,6 +105,10 @@ class ShelveDatabase(AbstractDatabase):
     @staticmethod
     def _is_new(obj):
         return not hasattr(obj, 'pk')
+
+    @staticmethod
+    def _id_exists(pk, db):
+        return str(pk) in db
 
     @staticmethod
     def _set_id(obj, pk):
