@@ -76,7 +76,7 @@ class ShelvePersistence(AbstractPersistence):
 
     def sync(self, obj):
         if self._is_new(obj):
-            return obj
+            return None
         else:
             if self._id_exists(obj.pk):
                 return self._get(obj.pk)
