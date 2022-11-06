@@ -22,7 +22,7 @@ class AbstractSequence(ABC):
         return self.last_id
 
 
-class IncrementalSequenceStrategy(AbstractSequence):
+class IncrementalSequence(AbstractSequence):
 
     def next(self):
         self.last_id += 1

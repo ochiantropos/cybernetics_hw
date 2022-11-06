@@ -1,6 +1,6 @@
 import unittest
 from db.database import ShelvePersistence
-from db.sequence import IncrementalSequenceStrategy
+from db.sequence import IncrementalSequence
 import os
 from db.exceptions import PersistentObjectDoesNotExists
 
@@ -21,7 +21,7 @@ class ShelvePersistenceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.repository = ShelvePersistence("players_test", IncrementalSequenceStrategy)
+        cls.repository = ShelvePersistence("players_test", IncrementalSequence)
         cls.sequence = cls.repository.sequence_strategy
 
     @classmethod
