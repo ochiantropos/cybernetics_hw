@@ -5,7 +5,7 @@ import os
 from .exceptions import *
 
 
-class AbstractPersistence(ABC):
+class AbstractRepository(ABC):
 
     def __init__(self, db_name):
         self.db_name = db_name
@@ -39,7 +39,7 @@ class AbstractPersistence(ABC):
         pass
 
 
-class ShelvePersistence(AbstractPersistence):
+class ShelveRepository(AbstractRepository):
     data_folder = os.path.join(os.path.dirname(__file__), "../data/")
 
     def __init__(self, db_name: str, sequence_strategy: AbstractSequence.__class__):
