@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import shelve
 from .sequence import AbstractSequence
 import os
+from .exceptions import *
 
 
 class AbstractPersistence(ABC):
@@ -54,12 +55,11 @@ class ShelvePersistence(AbstractPersistence):
         for obj in obj_list:
             self._save(obj)
 
-    # TODO: throw exception instead of returning None
     def get_by_id(self, pk):
         if self._id_exists(pk):
             return self._get(pk)
         else:
-            return None
+            raise PersistentObjectDoesNotExists(pk, self.db_name)
 
     def get_all(self):
         keys = set(self.db.keys())
@@ -68,14 +68,12 @@ class ShelvePersistence(AbstractPersistence):
             objects.append(self._get(k))
         return objects
 
-    # TODO: throw exception instead of passing
     def delete_by_id(self, pk):
         if self._id_exists(pk):
             self._delete(pk)
         else:
-            pass
+            raise PersistentObjectDoesNotExists(pk, self.db_name)
 
-    # TODO: throw exception instead of doing nothing
     def sync(self, obj):
         if self._is_new(obj):
             return obj
@@ -83,8 +81,7 @@ class ShelvePersistence(AbstractPersistence):
             if self._id_exists(obj.pk):
                 return self._get(obj.pk)
             else:
-                # TODO: throw exception
-                return None
+                raise PersistentObjectDoesNotExists(obj.pk, self.db_name)
 
     def refresh_persistence(self):
         self.db.close()

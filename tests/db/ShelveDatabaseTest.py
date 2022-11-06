@@ -2,6 +2,7 @@ import unittest
 from db.database import ShelvePersistence
 from db.sequence import IncrementalSequenceStrategy
 import os
+from db.exceptions import PersistentObjectDoesNotExists
 
 
 class Player:
@@ -69,8 +70,7 @@ class ShelvePersistenceTest(unittest.TestCase):
         player = Player("John", "Doe")
         self.repository.save(player)
         self.repository.delete_by_id(player.pk)
-        deleted_player = self.repository.get_by_id(player.pk)
-        self.assertIsNone(deleted_player)
+        self.assertRaises(PersistentObjectDoesNotExists, self.repository.get_by_id, player.pk)
 
     def test_sync(self):
         player = Player("Sync", "Sync")
