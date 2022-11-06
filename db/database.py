@@ -33,6 +33,10 @@ class AbstractPersistence(ABC):
     def sync(self, obj):
         pass
 
+    @abstractmethod
+    def refresh_persistence(self):
+        pass
+
 
 class ShelvePersistence(AbstractPersistence):
     data_folder = os.path.join(os.path.dirname(__file__), "../data/")
@@ -40,68 +44,67 @@ class ShelvePersistence(AbstractPersistence):
     def __init__(self, db_name: str, sequence_strategy: AbstractSequence.__class__):
         super().__init__(db_name)
         self.sequence_strategy_cls = sequence_strategy
+        self.db = self._open_db()
         self.sequence_strategy = sequence_strategy(self.get_last_id())
 
     def save(self, obj):
-        with self._open_db() as db:
-            return self._save(obj, db)
+        return self._save(obj)
 
     def save_all(self, obj_list):
-        with self._open_db() as db:
-            for obj in obj_list:
-                self._save(obj, db)
+        for obj in obj_list:
+            self._save(obj)
 
     # TODO: throw exception instead of returning None
     def get_by_id(self, pk):
-        with self._open_db() as db:
-            if self._id_exists(pk, db):
-                return self._get(pk, db)
-            else:
-                return None
+        if self._id_exists(pk):
+            return self._get(pk)
+        else:
+            return None
 
     def get_all(self):
-        with self._open_db() as db:
-            keys = set(db.keys())
-            objects = []
-            for k in keys:
-                objects.append(self._get(k, db))
-            return objects
+        keys = set(self.db.keys())
+        objects = []
+        for k in keys:
+            objects.append(self._get(k))
+        return objects
 
     # TODO: throw exception instead of passing
     def delete_by_id(self, pk):
-        with self._open_db() as db:
-            if self._id_exists(pk, db):
-                self._delete(pk, db)
-            else:
-                pass
+        if self._id_exists(pk):
+            self._delete(pk)
+        else:
+            pass
 
     # TODO: throw exception instead of doing nothing
     def sync(self, obj):
         if self._is_new(obj):
             return obj
         else:
-            with self._open_db() as db:
-                if self._id_exists(obj.pk, db):
-                    return self._get(obj.pk, db)
-                else:
-                    # TODO: throw exception
-                    return None
+            if self._id_exists(obj.pk):
+                return self._get(obj.pk)
+            else:
+                # TODO: throw exception
+                return None
 
-    def _delete(self, pk, db):
-        del db[str(pk)]
+    def refresh_persistence(self):
+        self.db.close()
+        self.db = self._open_db()
 
-    def _save(self, obj, db):
+    def _delete(self, pk):
+        del self.db[str(pk)]
+
+    def _save(self, obj):
         if self._is_new(obj):
             pk = self.sequence_strategy.next()
             self._set_id(obj, pk)
-            db[str(pk)] = obj
+            self.db[str(pk)] = obj
             return obj
         else:
-            db[str(obj.pk)] = obj
+            self.db[str(obj.pk)] = obj
             return obj
 
-    def _get(self, pk, db):
-        obj = db[str(pk)]
+    def _get(self, pk):
+        obj = self.db[str(pk)]
         self._set_id(obj, pk)
         return obj
 
@@ -109,9 +112,8 @@ class ShelvePersistence(AbstractPersistence):
     def _is_new(obj):
         return not hasattr(obj, 'pk')
 
-    @staticmethod
-    def _id_exists(pk, db):
-        return str(pk) in db
+    def _id_exists(self, pk):
+        return str(pk) in self.db
 
     @staticmethod
     def _set_id(obj, pk):
@@ -121,8 +123,10 @@ class ShelvePersistence(AbstractPersistence):
         return shelve.open(self.data_folder + self.db_name, "c")
 
     def get_last_id(self):
-        with self._open_db() as db:
-            keys = set(map(int, db.keys()))
-            if len(keys) == 0:
-                return self.sequence_strategy_cls.min_value()
-            return max(keys)
+        keys = set(map(int, self.db.keys()))
+        if len(keys) == 0:
+            return self.sequence_strategy_cls.min_value()
+        return max(keys)
+
+    def __del__(self):
+        self.db.close()

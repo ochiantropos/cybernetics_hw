@@ -13,14 +13,20 @@ class Player:
             self.pk = pk
 
 
-class ShelveDatabaseTest(unittest.TestCase):
+class ShelvePersistenceTest(unittest.TestCase):
 
-    def setUp(self) -> None:
-        self.repository = ShelvePersistence("players_test", IncrementalSequenceStrategy)
-        self.sequence = self.repository.sequence_strategy
+    repository = None
+    sequence = None
 
-    def tearDown(self) -> None:
-        self.remove_test_db_files()
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.repository = ShelvePersistence("players_test", IncrementalSequenceStrategy)
+        cls.sequence = cls.repository.sequence_strategy
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        del cls.repository
+        cls.remove_test_db_files()
 
     @staticmethod
     def remove_test_db_files():
@@ -51,7 +57,8 @@ class ShelveDatabaseTest(unittest.TestCase):
         self.assertEqual(player.surname, retrieved_player.surname)
 
     def test_get_all(self):
-        self.tearDown()
+        self.remove_test_db_files()
+        self.repository.refresh_persistence()
         players = [Player("John1", "Doe1"), Player("John2", "Doe2"), Player("John3", "Doe3"), Player("John4", "Doe4"),
                    Player("John5", "Doe5")]
         self.repository.save_all(players)
