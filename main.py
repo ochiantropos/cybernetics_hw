@@ -1,56 +1,58 @@
+from models.controler import Controler
+from models.controler import VievCommandsControler, LoginControler, RegisterControler, ReplenishTheBalanceControler, ViewListOfAllRoomsControler, BookRoomForDateArrivalControler, BookRoomForDateDepartureControler
 
-def session_filter( event : int, possible_variants_of_events: dict ):
 
-	if event in possible_variants_of_events.keys():
-		return True,possible_variants_of_events[ event ]
 
-	else:
-		return False,None
+class MainSession:
+	def __init__(self):
+
+		self.events = {
+			# name of command , modificator, self controler
+			0 : [ "view_commands", True,None],
+			1 : [ "register", True, RegisterControler('1') ],
+			2 : [ "login", True, LoginControler('2') ],
+			3 : [ "replenish_the_balance", False, ReplenishTheBalanceControler('3') ],
+			4 : [ "view_list_of_all_rooms", False, ViewListOfAllRoomsControler('4') ],
+			5 : [ "book_room_for_date_arrival", False, BookRoomForDateArrivalControler('5') ],
+			6 : [ "book_room_for_date_departure", False, BookRoomForDateDepartureControler('6') ],
+		}
+		self.events[0][2] =  VievCommandsControler('0',{ key : [value[0], value[1]] for key,value in self.events.items() })
+		self.answer = [None,None]	
+		self.__END_EVENT = False
+		self.controler = None
+		
+
+	def run( self ):
+		while not self.__END_EVENT:
+			self.command_entry_process( False )
+   
+   
+	def command_entry_process( self, logined : bool = False ):	
+		self.answer = self.session_filter( int( input() ), logined )
+  
+		if self.answer[ 0 ]:
+			self.controler = Controler( self.events[ self.answer[ 1 ] ] )
+   
+		else:
+			self.command_doesnt_found()
+
+
+	def command_doesnt_found( self ):
+		print("Command dosnt fount!!!")
+
+
+	def session_filter( self, event : int, logined_type : bool = False ):
+		if event in self.events.keys():
+			if not self.events[ event ][ 1 ] == logined_type:
+				return True,event
+			else:
+				return False,event
+
+		else:
+			return False,None
+
 
 
 if __name__ == '__main__':
 
-
-	events = {
-		0 : "view_commands",
-		1 : "register",
-		2 : "login",
-		3 : "replenish_the_balance",
-		4 : "view_list_of_all_rooms",
-		5 : "book_room_for_date_arrival",
-		6 : "book_room_for_date_departure",
-
-	}
-	
-	print( "Enter the command name:" )
-
-	answer = session_filter( int( input() ), events )
-	
-	if answer[ 0 ]:
-		if answer[ 1 ] == "view_commands":
-			for key,value in events.items():
-				max_ident = len( max( [ value for key,value in events.items() ], key=len ) ) + 1
-				print( f"[ command name %s :: command = {key} ]" % value.ljust( max_ident ), sep= '' )
-
-
-		elif answer[ 1 ] == "register":
-			print( "register session")
-		
-		elif answer[ 1 ] == "login":
-			print( "login session")
-
-		elif answer[ 1 ] == "replenish_the_balance":
-			print( "replenish the balance session" )
-
-		elif answer[ 1 ] == "view_list_of_all_rooms":
-			print( "view list of all rooms session" )
-
-		elif answer[ 1 ] == "book_room_for_date_arrival":
-			print(" book room for date arrival session ")
-
-		elif answer[ 1 ] == "book_room_for_date_departure":
-			print(" book room for date departure session")
-
-
-	else:
-		print( "Command donst found" )
+	MainSession().run()
