@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import shelve
-from .sequence import AbstractSequence
+from .sequence import AbstractSequence, IncrementalSequence
 import os
 from .exceptions import *
 
@@ -42,7 +42,7 @@ class AbstractRepository(ABC):
 class ShelveRepository(AbstractRepository):
     data_folder = os.path.join(os.path.dirname(__file__), "../data/")
 
-    def __init__(self, db_name: str, sequence_strategy: AbstractSequence.__class__):
+    def __init__(self, db_name: str, sequence_strategy: AbstractSequence.__class__ = IncrementalSequence):
         super().__init__(db_name)
         self.sequence_strategy_cls = sequence_strategy
         self.db = self._open_db()
